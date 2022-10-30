@@ -1,3 +1,4 @@
+mod completer;
 mod trie;
 
 fn main() {
