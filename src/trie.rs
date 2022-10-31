@@ -156,9 +156,9 @@ mod tests {
     #[test]
     fn test_build_trie() {
         let mut trie = Trie::new();
-        trie.insert(b"aabb");
-        trie.insert(b"aabc");
-        trie.insert(b"aacc");
+        trie.insert(b"aabb", 0);
+        trie.insert(b"aabc", 1);
+        trie.insert(b"aacc", 2);
 
         println!("{:#?}", trie);
         //assert!(false);
