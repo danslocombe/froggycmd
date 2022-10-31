@@ -5,5 +5,5 @@ pub struct Completion {
 
 pub trait Completer {
     type ConcreteCompletionIterator: Iterator<Item = Completion>;
-    fn complete(&self, prefix: &str) -> Box<Self::ConcreteCompletionIterator>;
+    fn complete(&self, prefix: &str) -> Self::ConcreteCompletionIterator;
 }
