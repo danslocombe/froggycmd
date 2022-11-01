@@ -1,11 +1,13 @@
 use crate::completer::{Completer, Completion};
 use crate::trie::Trie;
 
-struct HistoryCompleter {
+#[derive(Debug, Default)]
+pub struct HistoryCompleter {
     commands: Vec<Command>,
     trie: Trie,
 }
 
+#[derive(Debug)]
 struct Command {
     //time: blah
     command: String,
@@ -19,7 +21,7 @@ impl<'a> Completer for &'a HistoryCompleter {
     }
 }
 
-struct HistoryCompletionIterator<'a> {
+pub struct HistoryCompletionIterator<'a> {
     trie_iter: crate::trie::TrieNodeIterator<'a>,
 }
 

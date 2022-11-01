@@ -10,7 +10,7 @@ pub struct TrieNode {
     children: Vec<TrieNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Trie {
     roots: Vec<TrieNode>,
 }
