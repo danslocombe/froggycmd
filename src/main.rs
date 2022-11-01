@@ -3,25 +3,39 @@ mod history_completer;
 mod shell;
 mod trie;
 
-use console::Term;
+use crossterm::event::{
+    self, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
+};
+use crossterm::ExecutableCommand;
 
-use std::io::Write;
+use crossterm::cursor::{MoveLeft, MoveRight};
+use crossterm::execute;
+use crossterm::style::Print;
+use crossterm::terminal::{Clear, ClearType};
+
+use std::io::{stdout, Write};
 
 fn main() {
     let mut shell = shell::Shell::default();
 
-    let mut term = Term::stdout();
+    while let Ok(event) = event::read() {
+        match (event) {
+            event::Event::Key(key_event) => {
+                println!("{:?}", key_event);
+                let command = shell::Command::apply_key(&shell.current_prompt, key_event);
+                shell.apply_command(command);
 
-    while let Ok(k) = term.read_key() {
-        //println!("{:?}", k);
-        let command = shell::Command::apply_key(&shell.current_prompt, k);
-        shell.apply_command(command);
-
-        _ = term.clear_line().unwrap();
-        term.write(&shell.current_prompt.text.as_bytes()).unwrap();
-
-        _ = term.move_cursor_left(usize::MAX).unwrap();
-        _ = term.move_cursor_right(shell.current_prompt.pos).unwrap();
+                execute!(
+                    stdout(),
+                    Clear(ClearType::CurrentLine),
+                    Print(&shell.current_prompt.text),
+                    MoveLeft(u16::MAX),
+                    MoveRight(shell.current_prompt.pos as u16)
+                )
+                .unwrap();
+            }
+            _ => {}
+        }
     }
 
     println!("Hello, world!");
