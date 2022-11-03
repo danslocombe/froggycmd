@@ -18,6 +18,18 @@ impl Shell {
             _ => {}
         }
     }
+
+    fn preprompt(&self) -> String {
+        format!("{}>>>", "some/dir")
+    }
+
+    pub fn get_full_prompt_for_drawing(&self) -> (String, usize) {
+        let preprompt = self.preprompt();
+        (
+            format!("{}{}", preprompt, self.current_prompt.text),
+            self.current_prompt.pos + preprompt.len(),
+        )
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -26,7 +38,32 @@ pub struct Zipper {
     pub pos: usize,
 }
 
+fn is_block_delimiter(c: char) -> bool {
+    match c {
+        ' ' | '/' | '\\' => true,
+        _ => false,
+    }
+}
+
+fn delete_between(x: &str, start: usize, end: usize) -> String {
+    // TODO could write this as taking &mut String and not reallocate
+    // Doesnt really matter.
+
+    assert!(start < end);
+    assert!(end < x.len());
+
+    format!("{}{}", &x[0..start], &x[end..])
+}
+
 impl Zipper {
+    fn current(&self) -> Option<char> {
+        if self.pos < self.text.len() - 1 {
+            self.text.chars().nth(self.pos)
+        } else {
+            None
+        }
+    }
+
     pub fn insert(&mut self, c: char) {
         self.text.insert(self.pos, c);
         self.pos += 1;
@@ -37,7 +74,23 @@ impl Zipper {
     }
 
     pub fn cursor_right(&mut self) {
-        self.pos = (self.pos + 1).min(self.text.len() - 1);
+        self.pos = (self.pos + 1).min(self.text.len());
+    }
+
+    pub fn cursor_block_left(&mut self) {
+        loop {
+            if (self.pos == 0) {
+                return;
+            }
+
+            if let Some(x) = self.current() {
+                if (is_block_delimiter(x)) {
+                    return;
+                }
+            }
+
+            self.cursor_left();
+        }
     }
 
     pub fn delete_one(&mut self) {
@@ -53,7 +106,14 @@ impl Zipper {
     }
 
     pub fn delete_word(&mut self) {
-        todo!()
+        let start_pos = self.pos;
+        self.cursor_block_left();
+
+        self.text = if (start_pos >= self.text.len()) {
+            self.text[0..self.pos].to_owned()
+        } else {
+            delete_between(&self.text, self.pos, start_pos.min(self.text.len() - 1))
+        };
     }
 
     pub fn clone_insert(&self, c: char) -> Self {
@@ -98,7 +158,13 @@ pub enum Command {
 impl Command {
     pub fn apply_key(current: &Zipper, k: KeyEvent) -> Self {
         match k.code {
-            KeyCode::Left => Self::Text(zipper_clone_apply!(current, cursor_left)),
+            KeyCode::Left => {
+                if k.modifiers.contains(KeyModifiers::CONTROL) {
+                    Self::Text(zipper_clone_apply!(current, cursor_block_left))
+                } else {
+                    Self::Text(zipper_clone_apply!(current, cursor_left))
+                }
+            }
             KeyCode::Right => Self::Text(zipper_clone_apply!(current, cursor_right)),
 
             KeyCode::Backspace => {
