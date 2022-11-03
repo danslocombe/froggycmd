@@ -4,6 +4,10 @@ pub struct Completion {
 }
 
 pub trait Completer {
-    type ConcreteCompletionIterator: Iterator<Item = Completion>;
-    fn complete(&self, prefix: &str) -> Self::ConcreteCompletionIterator;
+    // Give space for completion iteartors to reference the underlying completer
+    type CompletionIterator<'a>: Iterator<Item = Completion>
+    where
+        Self: 'a;
+
+    fn complete<'a>(&'a self, prefix: &str) -> Self::CompletionIterator<'a>;
 }

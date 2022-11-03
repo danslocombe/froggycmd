@@ -13,9 +13,9 @@ struct Command {
     command: String,
 }
 
-impl<'a> Completer for &'a HistoryCompleter {
-    type ConcreteCompletionIterator = HistoryCompletionIterator<'a>;
-    fn complete(&self, prefix: &str) -> HistoryCompletionIterator<'a> {
+impl Completer for HistoryCompleter {
+    type CompletionIterator<'a> = HistoryCompletionIterator<'a>;
+    fn complete<'a>(&'a self, prefix: &str) -> HistoryCompletionIterator<'a> {
         let trie_iter = self.trie.lookup(prefix.as_bytes());
         HistoryCompletionIterator { trie_iter }
     }
